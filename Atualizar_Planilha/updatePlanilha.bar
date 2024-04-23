@@ -1,0 +1,110 @@
+Option Explicit
+
+' Sub-rotina que coordena todas as operações
+Sub ProcurarRequisicaoETrazerDados()
+    Dim wsReq As Worksheet, dadosSap1 As Worksheet, dadosSap2 As Worksheet
+    Dim dict As Object, sumDict As Object, sumDictNf As Object, dict2 As Object
+
+    ' Configuração inicial
+    Call InicializarAmbiente(wsReq, dadosSap1, dadosSap2)
+
+    ' Processamento de dados e criação de dicionários
+    Call ProcessarDadosSap1(dadosSap1, dict, sumDict, sumDictNf)
+    Call ProcessarDadosSap2(dadosSap2, dict2)
+
+    ' Atualizar planilha de processos
+    Call AtualizarFollowProcessos(wsReq, 13, dict, sumDict, sumDictNf, dict2)
+
+    ' Reabilitar configurações de ambiente
+    Call ReabilitarAmbiente
+End Sub
+
+Private Sub InicializarAmbiente(ByRef wsReq As Worksheet, ByRef dadosSap1 As Worksheet, ByRef dadosSap2 As Worksheet)
+    Application.ScreenUpdating = False
+    Application.EnableEvents = False
+    Application.Calculation = xlCalculationManual
+
+    Set wsReq = ThisWorkbook.Sheets("Follow Processos")
+    Set dadosSap1 = ThisWorkbook.Sheets("Base Sap1")
+    Set dadosSap2 = ThisWorkbook.Sheets("Base Sap2")
+End Sub
+
+Private Sub ProcessarDadosSap1(ByVal dadosSap1 As Worksheet, ByRef dict As Object, ByRef sumDict As Object, ByRef sumDictNf As Object)
+    Dim dataRange As Range, dataValues As Variant
+    Dim chave As String, chave_Valor_Nf As String
+    Dim i As Long
+
+    Set dict = CreateObject("Scripting.Dictionary")
+    Set sumDict = CreateObject("Scripting.Dictionary")
+    Set sumDictNf = CreateObject("Scripting.Dictionary")
+
+    Set dataRange = dadosSap1.Range("C2:H" & dadosSap1.Cells(dadosSap1.Rows.Count, "H").End(xlUp).Row)
+    dataValues = dataRange.Value
+
+    For i = 1 To UBound(dataValues, 1)
+        chave = dataValues(i, 1)
+        chave_Valor_Nf = dataValues(i, 3)
+        dict(chave) = chave_Valor_Nf
+
+        If sumDict.Exists(chave_Valor_Nf) Then
+            sumDict(chave_Valor_Nf) = sumDict(chave_Valor_Nf) + dataValues(i, 6)
+        Else
+            sumDict(chave_Valor_Nf) = dataValues(i, 6)
+        End If
+
+        If Not IsEmpty(dataValues(i, 5)) And Len(Trim(dataValues(i, 5))) > 0 Then
+            If sumDictNf.Exists(chave_Valor_Nf) Then
+                sumDictNf(chave_Valor_Nf) = sumDictNf(chave_Valor_Nf) + dataValues(i, 6)
+            Else
+                sumDictNf(chave_Valor_Nf) = dataValues(i, 6)
+            End If
+        End If
+    Next i
+End Sub
+
+Private Sub ProcessarDadosSap2(ByVal dadosSap2 As Worksheet, ByRef dict2 As Object)
+    Dim data2Range As Range, data2Values As Variant
+    Dim chave2 As String
+    Dim i As Long
+
+    Set dict2 = CreateObject("Scripting.Dictionary")
+    Set data2Range = dadosSap2.Range("K2:M" & dadosSap2.Cells(dadosSap2.Rows.Count, "N").End(xlUp).Row)
+    data2Values = data2Range.Value
+
+    For i = 1 To UBound(data2Values, 1)
+        chave2 = data2Values(i, 3)
+        If Not dict2.Exists(chave2) Then
+            dict2(chave2) = data2Values(i, 1)
+        End If
+    Next i
+End Sub
+
+Private Sub AtualizarFollowProcessos(ByVal wsReq As Worksheet, ByVal reqRow As Long, _
+                                     ByVal dict As Object, ByVal sumDict As Object, _
+                                     ByVal sumDictNf As Object, ByVal dict2 As Object)
+    Dim i As Long, chave As String, chave2 As String, chave_Valor_Nf As String
+
+    For i = reqRow To wsReq.Cells(wsReq.Rows.Count, "K").End(xlUp).Row
+        chave = wsReq.Cells(i, "K").Value
+
+        If dict.Exists(chave) Then
+            wsReq.Cells(i, "O").Value = dict(chave)
+            chave_Valor_Nf = dict(chave)
+            wsReq.Cells(i, "P").Value = IIf(sumDict.Exists(chave_Valor_Nf), sumDict(chave_Valor_Nf), "")
+            wsReq.Cells(i, "U").Value = IIf(sumDictNf.Exists(chave_Valor_Nf), sumDictNf(chave_Valor_Nf), "")
+        Else
+            wsReq.Cells(i, "O").Value = ""
+            wsReq.Cells(i, "P").Value = ""
+            wsReq.Cells(i, "U").Value = ""
+        End If
+
+        chave2 = wsReq.Cells(i, "O").Value
+        wsReq.Cells(i, "N").Value = IIf(dict2.Exists(chave2), dict2(chave2), "")
+    Next i
+End Sub
+
+Private Sub ReabilitarAmbiente()
+    Application.ScreenUpdating = True
+    Application.EnableEvents = True
+    Application.Calculation = xlCalculationAutomatic
+End Sub

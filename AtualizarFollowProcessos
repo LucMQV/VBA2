@@ -1,0 +1,45 @@
+Private Sub AtualizarFollowProcessos(ByVal dadosFollowProcessos As Worksheet, ByVal reqRow As Long, _
+
+                                     ByVal dict_Sap1 As Object, ByVal sumDict_Pedido As Object, _
+
+                                     ByVal sumDict_Nf As Object, ByVal dict_Sap2 As Object)
+
+    Dim i As Long, chave_Req As String, chave_Pedido As String, chave_Valor_Nf As String
+
+ 
+
+    For i = reqRow To dadosFollowProcessos.Cells(dadosFollowProcessos.Rows.Count, "K").End(xlUp).Row
+
+        chave_Req = dadosFollowProcessos.Cells(i, "K").Value
+
+ 
+
+        If dict_Sap1.Exists(chave_Req) Then
+
+            dadosFollowProcessos.Cells(i, "O").Value = dict_Sap1(chave_Req)
+
+            chave_Valor_Nf = dict_Sap1(chave_Req)
+
+            dadosFollowProcessos.Cells(i, "P").Value = IIf(sumDict_Pedido.Exists(chave_Valor_Nf), sumDict_Pedido(chave_Valor_Nf), "")
+
+            dadosFollowProcessos.Cells(i, "V").Value = IIf(sumDict_Nf.Exists(chave_Valor_Nf), sumDict_Nf(chave_Valor_Nf), "")
+
+        Else
+
+            dadosFollowProcessos.Cells(i, "O").Value = ""
+
+            dadosFollowProcessos.Cells(i, "P").Value = ""
+
+            dadosFollowProcessos.Cells(i, "V").Value = ""
+
+        End If
+
+ 
+
+        chave_Pedido = dadosFollowProcessos.Cells(i, "O").Value
+
+        dadosFollowProcessos.Cells(i, "Q").Value = IIf(dict_Sap2.Exists(chave_Pedido), dict_Sap2(chave_Pedido), "")
+
+    Next i
+
+End Sub

@@ -24,7 +24,10 @@ Private Sub ProcessarDadosSap1(ByVal dadosSap1 As Worksheet, ByRef dict_Sap1 As 
             End If
         End If
 
-        If Not IsEmpty(dadosSap1Values(i, 5)) And Len(Trim(dadosSap1Values(i, 5))) > 0 Then
+        ' Verifica se a chave do pedido e as células nas colunas E e G não estão vazias antes de somar no sumDict_Nf
+        If Not IsEmpty(chave_Pedido) And Len(Trim(chave_Pedido)) > 0 And _
+           Not IsEmpty(dadosSap1Values(i, 5)) And Len(Trim(dadosSap1Values(i, 5))) > 0 And _
+           Not IsEmpty(dadosSap1Values(i, 7)) And Len(Trim(dadosSap1Values(i, 7))) > 0 Then
             If sumDict_Nf.Exists(chave_Pedido) Then
                 sumDict_Nf(chave_Pedido) = sumDict_Nf(chave_Pedido) + dadosSap1Values(i, 6)
             Else

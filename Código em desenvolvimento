@@ -1,6 +1,6 @@
 Private Sub ProcessarDadosSap1(ByVal dadosSap1 As Worksheet, ByRef dict_Sap1 As Object, ByRef sumDict_Pedido As Object, ByRef sumDict_Nf As Object)
     Dim dadosSap1Range As Range, dadosSap1Values As Variant
-    Dim chave_Req As String, chave_Pedido As String
+    Dim chave_Req As String, chave_Pedido As String, valor As Double
     Dim i As Long
 
     Set dict_Sap1 = CreateObject("Scripting.Dictionary")
@@ -9,29 +9,35 @@ Private Sub ProcessarDadosSap1(ByVal dadosSap1 As Worksheet, ByRef dict_Sap1 As 
 
     Set dadosSap1Range = dadosSap1.Range("C2:H" & dadosSap1.Cells(dadosSap1.Rows.Count, "H").End(xlUp).Row)
     dadosSap1Values = dadosSap1Range.Value
-    
-    For i = 1 To UBound(dadosSap1Values, 1)
-        chave_Req = dadosSap1Values(i, 1)
-        chave_Pedido = dadosSap1Values(i, 3)
-        dict_Sap1(chave_Req) = chave_Pedido
 
-        ' Verifica se o número do pedido não é vazio antes de somar no sumDict_Pedido
-        If Not IsEmpty(chave_Pedido) And Len(Trim(chave_Pedido)) > 0 Then
-            If sumDict_Pedido.Exists(chave_Pedido) Then
-                sumDict_Pedido(chave_Pedido) = sumDict_Pedido(chave_Pedido) + dadosSap1Values(i, 6)
-            Else
-                sumDict_Pedido(chave_Pedido) = dadosSap1Values(i, 6)
-            End If
+    ' Looping através do array em vez de diretamente na planilha
+    For i = 1 To UBound(dadosSap1Values, 1)
+        chave_Req = Trim(dadosSap1Values(i, 1))
+        chave_Pedido = Trim(dadosSap1Values(i, 3))
+        valor = dadosSap1Values(i, 6)
+
+        ' Adiciona a relação chave_Req e chave_Pedido ao dicionário
+        If chave_Req <> "" Then
+            dict_Sap1(chave_Req) = chave_Pedido
         End If
 
-        ' Verifica se a chave do pedido e as células nas colunas E e G não estão vazias antes de somar no sumDict_Nf
-        If Not IsEmpty(chave_Pedido) And Len(Trim(chave_Pedido)) > 0 And _
-           Not IsEmpty(dadosSap1Values(i, 5)) And Len(Trim(dadosSap1Values(i, 5))) > 0 And _
-           Not IsEmpty(dadosSap1Values(i, 7)) And Len(Trim(dadosSap1Values(i, 7))) > 0 Then
-            If sumDict_Nf.Exists(chave_Pedido) Then
-                sumDict_Nf(chave_Pedido) = sumDict_Nf(chave_Pedido) + dadosSap1Values(i, 6)
+        ' Verificações combinadas para sumDict_Pedido e sumDict_Nf
+        If chave_Pedido <> "" Then
+            ' Soma ao sumDict_Pedido
+            If sumDict_Pedido.Exists(chave_Pedido) Then
+                sumDict_Pedido(chave_Pedido) = sumDict_Pedido(chave_Pedido) + valor
             Else
-                sumDict_Nf(chave_Pedido) = dadosSap1Values(i, 6)
+                sumDict_Pedido.Add chave_Pedido, valor
+            End If
+
+            ' Verifica condições adicionais para sumDict_Nf
+            If Not IsEmpty(dadosSap1Values(i, 5)) And Trim(dadosSap1Values(i, 5)) <> "" And _
+               Not IsEmpty(dadosSap1Values(i, 7)) And Trim(dadosSap1Values(i, 7)) <> "" Then
+                If sumDict_Nf.Exists(chave_Pedido) Then
+                    sumDict_Nf(chave_Pedido) = sumDict_Nf(chave_Pedido) + valor
+                Else
+                    sumDict_Nf.Add chave_Pedido, valor
+                End If
             End If
         End If
     Next i

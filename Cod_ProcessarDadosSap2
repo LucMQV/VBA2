@@ -1,0 +1,17 @@
+Private Sub ProcessarDadosSap2(ByVal dadosSap2 As Worksheet, ByRef dict_Sap2 As Object)
+    Dim dadosSap2Range As Range, dadosSap2Values As Variant
+    Dim chave_Pedido As String
+    Dim i As Long
+
+    Set dict_Sap2 = CreateObject("Scripting.Dictionary")
+    Set dadosSap2Range = dadosSap2.Range("K2:BF" & dadosSap2.Cells(dadosSap2.Rows.Count, "N").End(xlUp).Row)
+    dadosSap2Values = dadosSap2Range.Value
+
+
+    For i = 1 To UBound(dadosSap2Values, 1)
+        chave_Pedido = dadosSap2Values(i, 3)
+        If Not dict_Sap2.Exists(chave_Pedido) Then
+            dict_Sap2(chave_Pedido) = dadosSap2Values(i, 1)
+        End If
+    Next i
+End Sub

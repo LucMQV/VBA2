@@ -1,30 +1,46 @@
-Const COL_DATA_PEDIDO As Long = 1
-Const COL_CHAVE_PEDIDO As Long = 3
-Const COL_NOME_FORNECEDOR As Long = 35
-' Adicione constantes para outras colunas conforme necessário...
-
 Private Sub ProcessarDadosSap2(ByVal dadosSap2 As Worksheet, ByRef dict_Sap2 As Object)
-    Dim dadosSap2Range As Range, dadosSap2Values As Variant, colunaGValues As Variant
-    Dim chave_Pedido As String
+    Dim dadosSap2Range As Range, dadosSap2Values As Variant
+    Dim chave_Pedido As String, nomeFornecedor As Variant, dataPedido As Variant, nomeRequisitante As Variant, nomeComprador As Variant, statusPedido As Variant, numNF As Variant, dataNF As Variant, numOrdem As Variant, observacoesDaRequisicao As Variant, colunaG As Variant
     Dim i As Long
     Dim infoPedido As Object
-    Dim colunaG As Range
 
+    ' Inicialização do dicionário para armazenar os dados processados
     Set dict_Sap2 = CreateObject("Scripting.Dictionary")
-    Set dadosSap2Range = dadosSap2.Range("K2:BF" & dadosSap2.Cells(dadosSap2.Rows.Count, "BE").End(xlUp).Row)
-    Set colunaG = dadosSap2.Range("G2:G" & dadosSap2.Cells(dadosSap2.Rows.Count, "BE").End(xlUp).Row)  ' Carregar dados da Coluna G
+    ' Ajuste na definição do range para incluir a coluna G
+    Set dadosSap2Range = dadosSap2.Range("G2:BF" & dadosSap2.Cells(dadosSap2.Rows.Count, "BE").End(xlUp).Row)
     dadosSap2Values = dadosSap2Range.Value
-    colunaGValues = colunaG.Value
 
     For i = 1 To UBound(dadosSap2Values, 1)
-        chave_Pedido = Trim(dadosSap2Values(i, COL_CHAVE_PEDIDO))
+        chave_Pedido = Trim(dadosSap2Values(i, 4)) ' Ajuste na posição por incluir a coluna G
+        nomeFornecedor = dadosSap2Values(i, 36)
+        dataPedido = dadosSap2Values(i, 2)
+        nomeRequisitante = dadosSap2Values(i, 40)
+        nomeComprador = dadosSap2Values(i, 42)
+        statusPedido = dadosSap2Values(i, 46)
+        numNF = dadosSap2Values(i, 33)
+        dataNF = dadosSap2Values(i, 32)
+        numOrdem = dadosSap2Values(i, 37)
+        observacoesDaRequisicao = dadosSap2Values(i, 49)
+        colunaG = dadosSap2Values(i, 1) ' Valor da coluna G
+
         If chave_Pedido <> "" And Not dict_Sap2.Exists(chave_Pedido) Then
-            If colunaGValues(i, 1) <> "" Then ' Verifica se a célula na coluna G não está vazia
-                Set infoPedido = CreateObject("Scripting.Dictionary")
-                infoPedido.Add "Fornecedor", dadosSap2Values(i, COL_NOME_FORNECEDOR)
-                ' Adicionar outras informações aqui...
-                dict_Sap2.Add chave_Pedido, infoPedido
+            Set infoPedido = CreateObject("Scripting.Dictionary")
+            infoPedido.Add "Fornecedor", nomeFornecedor
+            infoPedido.Add "Data", dataPedido
+            infoPedido.Add "Nome_Requisitante", nomeRequisitante
+            infoPedido.Add "Nome_Comprador", nomeComprador
+            infoPedido.Add "Status_Pedido", statusPedido
+            infoPedido.Add "Numero_NF", numNF
+            infoPedido.Add "Data_NF", dataNF
+            infoPedido.Add "Numero_Ordem", numOrdem
+            infoPedido.Add "Observacoes_Requisicao", observacoesDaRequisicao
+
+            ' Verificar se a coluna G está preenchida antes de adicionar o valor de numNF ao dicionário
+            If colunaG <> "" Then
+                infoPedido.Add "Soma_Numero_NF", numNF
             End If
+
+            dict_Sap2.Add chave_Pedido, infoPedido
         End If
     Next i
 End Sub

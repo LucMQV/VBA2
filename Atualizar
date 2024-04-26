@@ -1,10 +1,10 @@
 Const COL_DATA_PEDIDO As Long = 1
 Const COL_CHAVE_PEDIDO As Long = 3
 Const COL_NOME_FORNECEDOR As Long = 35
-' Adicione constantes para outras colunas aqui...
+' Adicione constantes para outras colunas conforme necessário...
 
 Private Sub ProcessarDadosSap2(ByVal dadosSap2 As Worksheet, ByRef dict_Sap2 As Object)
-    Dim dadosSap2Range As Range, dadosSap2Values As Variant
+    Dim dadosSap2Range As Range, dadosSap2Values As Variant, colunaGValues As Variant
     Dim chave_Pedido As String
     Dim i As Long
     Dim infoPedido As Object

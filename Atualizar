@@ -1,0 +1,30 @@
+Const COL_DATA_PEDIDO As Long = 1
+Const COL_CHAVE_PEDIDO As Long = 3
+Const COL_NOME_FORNECEDOR As Long = 35
+' Adicione constantes para outras colunas aqui...
+
+Private Sub ProcessarDadosSap2(ByVal dadosSap2 As Worksheet, ByRef dict_Sap2 As Object)
+    Dim dadosSap2Range As Range, dadosSap2Values As Variant
+    Dim chave_Pedido As String
+    Dim i As Long
+    Dim infoPedido As Object
+    Dim colunaG As Range
+
+    Set dict_Sap2 = CreateObject("Scripting.Dictionary")
+    Set dadosSap2Range = dadosSap2.Range("K2:BF" & dadosSap2.Cells(dadosSap2.Rows.Count, "BE").End(xlUp).Row)
+    Set colunaG = dadosSap2.Range("G2:G" & dadosSap2.Cells(dadosSap2.Rows.Count, "BE").End(xlUp).Row)  ' Carregar dados da Coluna G
+    dadosSap2Values = dadosSap2Range.Value
+    colunaGValues = colunaG.Value
+
+    For i = 1 To UBound(dadosSap2Values, 1)
+        chave_Pedido = Trim(dadosSap2Values(i, COL_CHAVE_PEDIDO))
+        If chave_Pedido <> "" And Not dict_Sap2.Exists(chave_Pedido) Then
+            If colunaGValues(i, 1) <> "" Then ' Verifica se a célula na coluna G não está vazia
+                Set infoPedido = CreateObject("Scripting.Dictionary")
+                infoPedido.Add "Fornecedor", dadosSap2Values(i, COL_NOME_FORNECEDOR)
+                ' Adicionar outras informações aqui...
+                dict_Sap2.Add chave_Pedido, infoPedido
+            End If
+        End If
+    Next i
+End Sub

@@ -1,6 +1,6 @@
 Private Sub ProcessarDadosSap1(ByVal dadosSap1 As Worksheet, ByRef dict_Sap1 As Object, ByRef sumDict_Pedido As Object, ByRef sumDict_Nf As Object)
     Dim dadosSap1Range As Range, dadosSap1Values As Variant
-    Dim chave_Req As String, chave_Pedido As String, valor As Double, chave_Recebimento As String
+    Dim chave_Req As String, chave_Pedido As String, valor As Double, chave_Recebimento As String, colGValue As Variant
     Dim i As Long
 
     Set dict_Sap1 = CreateObject("Scripting.Dictionary")
@@ -15,6 +15,7 @@ Private Sub ProcessarDadosSap1(ByVal dadosSap1 As Worksheet, ByRef dict_Sap1 As 
         chave_Pedido = Trim(dadosSap1Values(i, 3))
         valor = dadosSap1Values(i, 6)
         chave_Recebimento = Trim(dadosSap1Values(i, 5))
+        colGValue = dadosSap1Values(i, 7) ' Valor na coluna G
 
         If chave_Req <> "" Then
             dict_Sap1(chave_Req) = chave_Pedido
@@ -23,8 +24,8 @@ Private Sub ProcessarDadosSap1(ByVal dadosSap1 As Worksheet, ByRef dict_Sap1 As 
         If chave_Pedido <> "" Then
             sumDict_Pedido(chave_Pedido) = sumDict_Pedido(chave_Pedido) + valor
         End If
-        
-        If chave_Recebimento <> "" And chave_Recebimento <> " " Then
+
+        If chave_Recebimento <> "" And chave_Pedido <> "" And Not IsEmpty(colGValue) Then
             sumDict_Nf(chave_Recebimento) = sumDict_Nf(chave_Recebimento) + valor
         End If
     Next i

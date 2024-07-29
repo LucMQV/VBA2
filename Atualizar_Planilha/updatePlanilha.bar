@@ -1,60 +1,20 @@
-Sub ListarNomesDasPlanilhas()
+Sub ConcatenarCélulas()
     Dim ws As Worksheet
-    Dim nomesPlanilhas As String
-    
-    nomesPlanilhas = "Planilhas disponíveis no workbook:" & vbCrLf
-    
-    For Each ws In ThisWorkbook.Sheets
-        nomesPlanilhas = nomesPlanilhas & ws.Name & vbCrLf
-    Next ws
-    
-    MsgBox nomesPlanilhas
-End Sub
-
-Sub BuscarGerentes()
-    Dim ws As Worksheet
-    Dim wsContaReal As Worksheet
     Dim lastRow As Long
-    Dim centroCusto As String
-    Dim gerente As String
     Dim i As Long
-    Dim j As Long
 
-    ' Verifique se as planilhas existem
-    On Error Resume Next
+    ' Defina a planilha onde a operação será realizada
     Set ws = ThisWorkbook.Sheets("BD AS400")
-    Set wsContaReal = ThisWorkbook.Sheets("Conta Real")
-    On Error GoTo 0
-    
-    If ws Is Nothing Then
-        MsgBox "A planilha 'BD AS400' não foi encontrada. Execute 'ListarNomesDasPlanilhas' para verificar os nomes das planilhas.", vbCritical
-        Exit Sub
-    End If
-    
-    If wsContaReal Is Nothing Then
-        MsgBox "A planilha 'Conta Real' não foi encontrada. Execute 'ListarNomesDasPlanilhas' para verificar os nomes das planilhas.", vbCritical
-        Exit Sub
-    End If
 
-    ' Encontre a última linha na coluna DV na planilha BD AS400
-    lastRow = ws.Cells(ws.Rows.Count, "DV").End(xlUp).Row
+    ' Encontre a última linha na coluna AI
+    lastRow = ws.Cells(ws.Rows.Count, "AI").End(xlUp).Row
 
-    ' Percorra cada linha na coluna DV
+    ' Percorra cada linha na coluna AI
     For i = 4 To lastRow
-        centroCusto = ws.Cells(i, "DV").Value
-
-        ' Inicialize a variável gerente
-        gerente = ""
-
-        ' Encontre o centro de custo na planilha "Conta Real"
-        For j = 1 To wsContaReal.Cells(wsContaReal.Rows.Count, "F").End(xlUp).Row
-            If wsContaReal.Cells(j, "F").Value = centroCusto Then
-                gerente = wsContaReal.Cells(j, "J").Value
-                Exit For
-            End If
-        Next j
-
-        ' Insira o nome do gerente na coluna IH
-        ws.Cells(i, "IH").Value = gerente
+        ' Verifique se há valor na célula AI
+        If ws.Cells(i, "AI").Value <> "" Then
+            ' Concatene os valores de AI e HU e coloque o resultado na célula II
+            ws.Cells(i, "II").Value = ws.Cells(i, "AI").Value & ws.Cells(i, "HU").Value
+        End If
     Next i
 End Sub

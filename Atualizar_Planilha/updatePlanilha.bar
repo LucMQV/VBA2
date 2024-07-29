@@ -7,16 +7,31 @@ Sub BuscarGerentes()
     Dim i As Long
     Dim j As Long
 
-    ' Defina suas planilhas
-    Set ws = ThisWorkbook.Sheets("NomeDaSuaPlanilha")
+    ' Verifique se as planilhas existem
+    On Error Resume Next
+    Set ws = ThisWorkbook.Sheets("BD AS400")
     Set wsContaReal = ThisWorkbook.Sheets("Conta Real")
+    On Error GoTo 0
+    
+    If ws Is Nothing Then
+        MsgBox "A planilha 'BD AS400' não foi encontrada.", vbCritical
+        Exit Sub
+    End If
+    
+    If wsContaReal Is Nothing Then
+        MsgBox "A planilha 'Conta Real' não foi encontrada.", vbCritical
+        Exit Sub
+    End If
 
-    ' Encontre a última linha na coluna DV
+    ' Encontre a última linha na coluna DV na planilha BD AS400
     lastRow = ws.Cells(ws.Rows.Count, "DV").End(xlUp).Row
 
     ' Percorra cada linha na coluna DV
     For i = 4 To lastRow
         centroCusto = ws.Cells(i, "DV").Value
+
+        ' Inicialize a variável gerente
+        gerente = ""
 
         ' Encontre o centro de custo na planilha "Conta Real"
         For j = 1 To wsContaReal.Cells(wsContaReal.Rows.Count, "F").End(xlUp).Row

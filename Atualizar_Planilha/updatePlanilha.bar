@@ -1,112 +1,32 @@
-Option Explicit
-
-' Sub-rotina que coordena todas as operações
-Sub ProcurarRequisicaoETrazerDados()
-    Dim dadosFollowProcessos As Worksheet, dadosSap1 As Worksheet, dadosSap2 As Worksheet
-    Dim dict_Sap1 As Object, sumDict_Pedido As Object, sumDict_Nf As Object, dict_Sap2 As Object
-
-    ' Configuração inicial
-    Call InicializarAmbiente(dadosFollowProcessos, dadosSap1, dadosSap2)
-
-    ' Processamento de dados e criação de dicionários
-    Call ProcessarDadosSap1(dadosSap1, dict_Sap1, sumDict_Pedido, sumDict_Nf)
-    Call ProcessarDadosSap2(dadosSap2, dict_Sap2)
-
-    ' Atualizar planilha de processos
-    Call AtualizarFollowProcessos(dadosFollowProcessos, 13, dict_Sap1, sumDict_Pedido, sumDict_Nf, dict_Sap2)
-
-    ' Reabilitar configurações de ambiente
-    Call ReabilitarAmbiente
-End Sub
-
-Private Sub InicializarAmbiente(ByRef dadosFollowProcessos As Worksheet, ByRef dadosSap1 As Worksheet, ByRef dadosSap2 As Worksheet)
-    Application.ScreenUpdating = False
-    Application.EnableEvents = False
-    Application.Calculation = xlCalculationManual
-
-    Set dadosFollowProcessos = ThisWorkbook.Sheets("Follow Processos")
-    Set dadosSap1 = ThisWorkbook.Sheets("Base Sap1")
-    Set dadosSap2 = ThisWorkbook.Sheets("Base Sap2")
-End Sub
-
-Private Sub ProcessarDadosSap1(ByVal dadosSap1 As Worksheet, ByRef dict_Sap1 As Object, ByRef sumDict_Pedido As Object, ByRef sumDict_Nf As Object)
-    Dim dadosSap1Range As Range, dadosSap1Values As Variant
-    Dim chave_Req As String, chave_Pedido As String
+Sub BuscarGerentes()
+    Dim ws As Worksheet
+    Dim wsContaReal As Worksheet
+    Dim lastRow As Long
+    Dim centroCusto As String
+    Dim gerente As String
     Dim i As Long
+    Dim j As Long
 
-    Set dict_Sap1 = CreateObject("Scripting.Dictionary")
-    Set sumDict_Pedido = CreateObject("Scripting.Dictionary")
-    Set sumDict_Nf = CreateObject("Scripting.Dictionary")
+    ' Defina suas planilhas
+    Set ws = ThisWorkbook.Sheets("NomeDaSuaPlanilha")
+    Set wsContaReal = ThisWorkbook.Sheets("Conta Real")
 
-    Set dadosSap1Range = dadosSap1.Range("C2:H" & dadosSap1.Cells(dadosSap1.Rows.Count, "H").End(xlUp).Row)
-    dadosSap1Values = dadosSap1Range.Value
-    
+    ' Encontre a última linha na coluna DV
+    lastRow = ws.Cells(ws.Rows.Count, "DV").End(xlUp).Row
 
-    For i = 1 To UBound(dadosSap1Values, 1)
-        chave_Req = dadosSap1Values(i, 1)
-        chave_Pedido = dadosSap1Values(i, 3)
-        dict_Sap1(chave_Req) = chave_Pedido
+    ' Percorra cada linha na coluna DV
+    For i = 4 To lastRow
+        centroCusto = ws.Cells(i, "DV").Value
 
-        If sumDict_Pedido.Exists(chave_Pedido) Then
-            sumDict_Pedido(chave_Pedido) = sumDict_Pedido(chave_Pedido) + dadosSap1Values(i, 6)
-        Else
-            sumDict_Pedido(chave_Pedido) = dadosSap1Values(i, 6)
-        End If
-
-        If Not IsEmpty(dadosSap1Values(i, 5)) And Len(Trim(dadosSap1Values(i, 5))) > 0 Then
-            If sumDict_Nf.Exists(chave_Pedido) Then
-                sumDict_Nf(chave_Pedido) = sumDict_Nf(chave_Pedido) + dadosSap1Values(i, 6)
-            Else
-                sumDict_Nf(chave_Pedido) = dadosSap1Values(i, 6)
+        ' Encontre o centro de custo na planilha "Conta Real"
+        For j = 1 To wsContaReal.Cells(wsContaReal.Rows.Count, "F").End(xlUp).Row
+            If wsContaReal.Cells(j, "F").Value = centroCusto Then
+                gerente = wsContaReal.Cells(j, "J").Value
+                Exit For
             End If
-        End If
+        Next j
+
+        ' Insira o nome do gerente na coluna IH
+        ws.Cells(i, "IH").Value = gerente
     Next i
 End Sub
-
-Private Sub ProcessarDadosSap2(ByVal dadosSap2 As Worksheet, ByRef dict_Sap2 As Object)
-    Dim dadosSap2Range As Range, dadosSap2Values As Variant
-    Dim chave_Pedido As String
-    Dim i As Long
-
-    Set dict_Sap2 = CreateObject("Scripting.Dictionary")
-    Set dadosSap2Range = dadosSap2.Range("K2:M" & dadosSap2.Cells(dadosSap2.Rows.Count, "N").End(xlUp).Row)
-    dadosSap2Values = dadosSap2Range.Value
-
-    For i = 1 To UBound(dadosSap2Values, 1)
-        chave_Pedido = dadosSap2Values(i, 3)
-        If Not dict_Sap2.Exists(chave_Pedido) Then
-            dict_Sap2(chave_Pedido) = dadosSap2Values(i, 1)
-        End If
-    Next i
-End Sub
-
-Private Sub AtualizarFollowProcessos(ByVal dadosFollowProcessos As Worksheet, ByVal reqRow As Long, _
-                                     ByVal dict_Sap1 As Object, ByVal sumDict_Pedido As Object, _
-                                     ByVal sumDict_Nf As Object, ByVal dict_Sap2 As Object)
-    Dim i As Long, chave_Req As String, chave_Pedido As String, chave_Valor_Nf As String
-
-    For i = reqRow To dadosFollowProcessos.Cells(dadosFollowProcessos.Rows.Count, "K").End(xlUp).Row
-        chave_Req = dadosFollowProcessos.Cells(i, "K").Value
-
-        If dict_Sap1.Exists(chave_Req) Then
-            dadosFollowProcessos.Cells(i, "O").Value = dict_Sap1(chave_Req)
-            chave_Valor_Nf = dict_Sap1(chave_Req)
-            dadosFollowProcessos.Cells(i, "P").Value = IIf(sumDict_Pedido.Exists(chave_Valor_Nf), sumDict_Pedido(chave_Valor_Nf), "")
-            dadosFollowProcessos.Cells(i, "U").Value = IIf(sumDict_Nf.Exists(chave_Valor_Nf), sumDict_Nf(chave_Valor_Nf), "")
-        Else
-            dadosFollowProcessos.Cells(i, "O").Value = ""
-            dadosFollowProcessos.Cells(i, "P").Value = ""
-            dadosFollowProcessos.Cells(i, "U").Value = ""
-        End If
-
-        chave_Pedido = dadosFollowProcessos.Cells(i, "O").Value
-        dadosFollowProcessos.Cells(i, "N").Value = IIf(dict_Sap2.Exists(chave_Pedido), dict_Sap2(chave_Pedido), "")
-    Next i
-End Sub
-
-Private Sub ReabilitarAmbiente()
-    Application.ScreenUpdating = True
-    Application.EnableEvents = True
-    Application.Calculation = xlCalculationAutomatic
-End Sub
-

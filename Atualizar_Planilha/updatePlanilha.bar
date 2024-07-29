@@ -1,3 +1,16 @@
+Sub ListarNomesDasPlanilhas()
+    Dim ws As Worksheet
+    Dim nomesPlanilhas As String
+    
+    nomesPlanilhas = "Planilhas disponíveis no workbook:" & vbCrLf
+    
+    For Each ws In ThisWorkbook.Sheets
+        nomesPlanilhas = nomesPlanilhas & ws.Name & vbCrLf
+    Next ws
+    
+    MsgBox nomesPlanilhas
+End Sub
+
 Sub BuscarGerentes()
     Dim ws As Worksheet
     Dim wsContaReal As Worksheet
@@ -14,12 +27,12 @@ Sub BuscarGerentes()
     On Error GoTo 0
     
     If ws Is Nothing Then
-        MsgBox "A planilha 'BD AS400' não foi encontrada.", vbCritical
+        MsgBox "A planilha 'BD AS400' não foi encontrada. Execute 'ListarNomesDasPlanilhas' para verificar os nomes das planilhas.", vbCritical
         Exit Sub
     End If
     
     If wsContaReal Is Nothing Then
-        MsgBox "A planilha 'Conta Real' não foi encontrada.", vbCritical
+        MsgBox "A planilha 'Conta Real' não foi encontrada. Execute 'ListarNomesDasPlanilhas' para verificar os nomes das planilhas.", vbCritical
         Exit Sub
     End If
 

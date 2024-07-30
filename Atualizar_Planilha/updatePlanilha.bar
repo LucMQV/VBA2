@@ -1,20 +1,134 @@
-Sub ConcatenarCélulas()
+Sub ProcessarDados()
     Dim ws As Worksheet
+    Dim wsContaReal As Worksheet
+    Dim wsME2K_PED As Worksheet
+    Dim wsContasContabeis As Worksheet
+    Dim wsSAP_01 As Worksheet
     Dim lastRow As Long
+    Dim lastRowContaReal As Long
+    Dim lastRowME2K_PED As Long
+    Dim lastRowContasContabeis As Long
+    Dim lastRowSAP_01 As Long
+    Dim centroCusto As String
+    Dim gerente As String
+    Dim valorConcatenado As String
+    Dim valorEncontrado As String
+    Dim valorIJ As String
+    Dim valorIK As String
+    Dim valorFC As String
+    Dim valorIL As String
     Dim i As Long
-
-    ' Defina a planilha onde a operação será realizada
-    Set ws = ThisWorkbook.Sheets("BD AS400")
-
-    ' Encontre a última linha na coluna AI
-    lastRow = ws.Cells(ws.Rows.Count, "AI").End(xlUp).Row
-
-    ' Percorra cada linha na coluna AI
+    Dim j As Long
+    Dim dictGerentes As Object
+    Dim dictContaContabil As Object
+    Dim dictContasContabeis As Object
+    Dim dictSAP_01 As Object
+    
+    ' Inicialize os dicionários para armazenar os gerentes, contas contábeis, valores de contas contábeis e valores do SAP_01
+    Set dictGerentes = CreateObject("Scripting.Dictionary")
+    Set dictContaContabil = CreateObject("Scripting.Dictionary")
+    Set dictContasContabeis = CreateObject("Scripting.Dictionary")
+    Set dictSAP_01 = CreateObject("Scripting.Dictionary")
+    
+    ' Defina as planilhas
+    Set ws = ThisWorkbook.Sheets("BD_AS400")
+    Set wsContaReal = ThisWorkbook.Sheets("Conta Real")
+    Set wsME2K_PED = ThisWorkbook.Sheets("ME2K_PED")
+    Set wsContasContabeis = ThisWorkbook.Sheets("Contas_Contabeis")
+    Set wsSAP_01 = ThisWorkbook.Sheets("SAP_01")
+    
+    ' Verifique se as planilhas existem
+    If ws Is Nothing Or wsContaReal Is Nothing Or wsME2K_PED Is Nothing Or wsContasContabeis Is Nothing Or wsSAP_01 Is Nothing Then Exit Sub
+    
+    ' Encontre a última linha nas planilhas
+    lastRow = ws.Cells(ws.Rows.Count, "DV").End(xlUp).Row
+    lastRowContaReal = wsContaReal.Cells(wsContaReal.Rows.Count, "F").End(xlUp).Row
+    lastRowME2K_PED = wsME2K_PED.Cells(wsME2K_PED.Rows.Count, "O").End(xlUp).Row
+    lastRowContasContabeis = wsContasContabeis.Cells(wsContasContabeis.Rows.Count, "C").End(xlUp).Row
+    lastRowSAP_01 = wsSAP_01.Cells(wsSAP_01.Rows.Count, "C").End(xlUp).Row
+    
+    ' Carregue os gerentes em um dicionário para acesso rápido
+    For j = 1 To lastRowContaReal
+        centroCusto = Trim(wsContaReal.Cells(j, "F").Value)
+        gerente = wsContaReal.Cells(j, "J").Value
+        If Not dictGerentes.exists(centroCusto) Then
+            dictGerentes.Add centroCusto, gerente
+        End If
+    Next j
+    
+    ' Carregue as contas contábeis em um dicionário para acesso rápido
+    For j = 1 To lastRowME2K_PED
+        valorConcatenado = Trim(wsME2K_PED.Cells(j, "O").Value)
+        valorEncontrado = wsME2K_PED.Cells(j, "L").Value
+        If Not dictContaContabil.exists(valorConcatenado) Then
+            dictContaContabil.Add valorConcatenado, valorEncontrado
+        End If
+    Next j
+    
+    ' Carregue os valores da planilha Contas_Contabeis em um dicionário para acesso rápido
+    For j = 1 To lastRowContasContabeis
+        valorIJ = Trim(wsContasContabeis.Cells(j, "C").Value)
+        valorIK = wsContasContabeis.Cells(j, "E").Value
+        If Not dictContasContabeis.exists(valorIJ) Then
+            dictContasContabeis.Add valorIJ, valorIK
+        End If
+    Next j
+    
+    ' Carregue os valores da planilha SAP_01 em um dicionário para acesso rápido
+    For j = 1 To lastRowSAP_01
+        valorFC = Trim(wsSAP_01.Cells(j, "C").Value)
+        valorIL = wsSAP_01.Cells(j, "K").Value
+        If Not dictSAP_01.exists(valorFC) Then
+            dictSAP_01.Add valorFC, valorIL
+        End If
+    Next j
+    
+    ' Percorra cada linha na planilha BD_AS400
     For i = 4 To lastRow
-        ' Verifique se há valor na célula AI
+        centroCusto = Trim(ws.Cells(i, "DV").Value)
+        
+        ' Insira o nome do gerente na coluna IH, se existir no dicionário
+        If dictGerentes.exists(centroCusto) Then
+            ws.Cells(i, "IH").Value = dictGerentes(centroCusto)
+        Else
+            ws.Cells(i, "IH").Value = "Gerente não encontrado"
+        End If
+        
+        ' Concatene os valores de AI e HU e coloque o resultado na célula II
         If ws.Cells(i, "AI").Value <> "" Then
-            ' Concatene os valores de AI e HU e coloque o resultado na célula II
             ws.Cells(i, "II").Value = ws.Cells(i, "AI").Value & ws.Cells(i, "HU").Value
+        End If
+        
+        ' Verifique e insira o valor na coluna IJ, se existir no dicionário
+        valorConcatenado = ws.Cells(i, "II").Value
+        If dictContaContabil.exists(valorConcatenado) Then
+            ws.Cells(i, "IJ").Value = dictContaContabil(valorConcatenado)
+        Else
+            ws.Cells(i, "IJ").Value = "Investimento"
+        End If
+        
+        ' Verifique e insira o valor na coluna IK, se existir no dicionário
+        valorIJ = ws.Cells(i, "IJ").Value
+        If dictContasContabeis.exists(valorIJ) Then
+            ws.Cells(i, "IK").Value = dictContasContabeis(valorIJ)
+        Else
+            ws.Cells(i, "IK").Value = ""
+        End If
+        
+        ' Verifique e insira o valor na coluna IL, se existir no dicionário
+        valorFC = ws.Cells(i, "FC").Value
+        If dictSAP_01.exists(valorFC) Then
+            ws.Cells(i, "IL").Value = dictSAP_01(valorFC)
+        Else
+            ws.Cells(i, "IL").Value = ""
+        End If
+        
+        ' Verifique e insira o valor na coluna IM conforme a lógica adicional
+        valorIL = ws.Cells(i, "IL").Value
+        If valorIL = "INFRA" Then
+            ws.Cells(i, "IM").Value = "Nasser"
+        Else
+            ws.Cells(i, "IM").Value = ws.Cells(i, "IH").Value
         End If
     Next i
 End Sub
